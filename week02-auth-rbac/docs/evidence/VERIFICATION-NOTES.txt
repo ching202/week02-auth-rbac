@@ -1,0 +1,27 @@
+VERIFICATION SCOPE
+
+Prepared October 28, 2026, America/New_York.
+Runtime: Node.js 24.19.0 on Windows.
+Automated backend/configuration suite: 28 passing, zero failing.
+Headless browser walkthrough: Chrome 156.0.8078.48, 12 passing scenario checks.
+Viewport checks: 1440 x 1100 desktop, 390 x 844 mobile, full-page screenshots.
+The final CSS formatting was followed by a second passing browser walkthrough.
+Captured desktop/mobile images were also visually inspected.
+
+The tests create isolated in-memory databases and loopback HTTP servers. Their
+passing results verify application behavior, not a hosted deployment.
+
+Execution-environment issues were kept separate from application findings:
+- The initial sandbox denied loopback connections. Tests were rerun after the
+  user granted network permission.
+- Edge could not launch in that sandbox. Chrome ran the complete walkthrough.
+- The standalone server printed successful startup with generated .env settings,
+  but a separate sandboxed preview request timed out. That temporary server was
+  stopped. Run the README commands in your normal local terminal for your demo.
+
+Expected negative HTTP tests generated five browser failed-resource console
+messages. There were no uncaught JavaScript exceptions, unexpected console
+errors, or failed request transports in the successful browser walkthrough.
+
+No GitHub remote, public hosting, webcam video, or LMS submission was created.
+The user's follow-up explicitly requested a project prepared for manual upload.

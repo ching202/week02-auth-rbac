@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="An authentication and role-based access control learning lab.">
+  <title>Gatehouse · Access Lab</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Gatehouse home"><span class="brand-mark" aria-hidden="true">g.</span>gatehouse<span class="brand-divider"></span><span class="brand-section">Access Lab</span></a>
+      <div class="environment"><span class="status-dot"></span> AUTHENTICATION + RBAC</div>
+    </header>
+
+    <main id="main">
+      <section class="intro" aria-labelledby="page-title">
+        <div><p class="eyebrow">A SMALL APP. A REAL ACCESS BOUNDARY.</p><h1 id="page-title">One identity.<br><span>The right access.</span></h1>
+          <p class="lede">Sign in, explore your permissions, and see how the server decides who gets through.</p></div>
+        <div class="session-card"><span class="tiny-label">CURRENT SESSION</span><div id="session-status"><span class="status-dot neutral"></span> Checking session…</div><p id="session-detail">Connecting to the access server</p></div>
+      </section>
+
+      <div class="workspace">
+        <section class="identity panel" aria-labelledby="identity-title">
+          <div class="section-kicker"><span>01 / IDENTITY</span><span class="small-shield" aria-hidden="true">◇</span></div>
+          <h2 id="identity-title">Start with you.</h2>
+          <p class="muted" id="identity-description">Create an account or pick up where you left off.</p>
+          <div id="auth-area">
+            <div class="mode-switch" role="group" aria-label="Authentication mode">
+              <button type="button" id="login-tab" aria-pressed="true">Sign in</button>
+              <button type="button" id="register-tab" aria-pressed="false">Create account</button>
+            </div>
+            <form id="auth-form">
+              <label for="username">Username</label>
+              <input id="username" name="username" autocomplete="username" placeholder="e.g. alex_morgan" required minlength="3" maxlength="32" pattern="[A-Za-z0-9_]{3,32}" aria-describedby="username-hint" spellcheck="false" autocapitalize="none">
+              <p class="field-hint" id="username-hint">3–32 letters, numbers, or underscores.</p>
+              <div class="password-label"><label for="password">Password</label><button type="button" id="toggle-password" class="text-button" aria-controls="password" aria-pressed="false">Show</button></div>
+              <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Your private passphrase" required minlength="12" maxlength="128" aria-describedby="password-hint">
+              <p class="field-hint" id="password-hint">12–128 characters. Spaces and symbols welcome.</p>
+              <button id="submit-auth" class="button primary full" type="submit">Sign in <span aria-hidden="true">↗</span></button>
+            </form>
+            <p class="registration-note" id="registration-note">New accounts receive the <strong>User</strong> role. Admin access is provisioned separately.</p>
+          </div>
+          <div id="signed-in-area" hidden>
+            <div class="avatar" id="avatar" aria-hidden="true">U</div>
+            <h3 id="account-name"></h3><p class="role-pill" id="account-role"></p>
+            <p class="muted">Your session is active. Explore the resources to see what your role allows.</p>
+            <button id="logout" class="button secondary full" type="button">Sign out <span aria-hidden="true">↗</span></button>
+            <p class="registration-note">Signing out revokes this session on the server.</p>
+          </div>
+          <p id="auth-message" class="feedback" role="status" aria-live="polite"></p>
+          <div class="identity-footer"><span class="status-dot"></span> Argon2id password protection</div>
+        </section>
+
+        <section class="resources" aria-labelledby="resources-title">
+          <div class="resources-heading"><div><p class="section-kicker">02 / ACCESS</p><h2 id="resources-title">Try the doors.</h2></div><span class="tiny-label">3 RESOURCES</span></div>
+          <p class="resources-description">Every request is checked on the server. Try any resource, with any role.</p>
+          <article class="resource-card"><div class="resource-number">01</div><div class="resource-content"><div class="resource-title"><h3>Public space</h3><span class="role-pill public">Everyone</span></div><p>An open door. No account needed.</p><code>GET /api/public</code></div><button type="button" class="resource-button" data-endpoint="/api/public" aria-label="Open public resource">Open <span aria-hidden="true">↗</span></button></article>
+          <article class="resource-card"><div class="resource-number">02</div><div class="resource-content"><div class="resource-title"><h3>User dashboard</h3><span class="role-pill">User + Admin</span></div><p>Your profile and active session.</p><code>GET /api/profile</code></div><button type="button" class="resource-button" data-endpoint="/api/profile" aria-label="Open user dashboard">Open <span aria-hidden="true">↗</span></button></article>
+          <article class="resource-card"><div class="resource-number">03</div><div class="resource-content"><div class="resource-title"><h3>Admin directory</h3><span class="role-pill admin">Admin only</span></div><p>A restricted list of registered users.</p><code>GET /api/admin/users</code></div><button type="button" class="resource-button" data-endpoint="/api/admin/users" aria-label="Open admin directory">Open <span aria-hidden="true">↗</span></button></article>
+          <div class="boundary-note"><span aria-hidden="true">↳</span><p><strong>A visible button isn't permission.</strong><br>The server checks your session and role before returning data.</p></div>
+        </section>
+      </div>
+
+      <section class="inspector panel" aria-labelledby="inspector-title">
+        <div class="inspector-header"><div><p class="section-kicker">03 / EVIDENCE</p><h2 id="inspector-title">The server's answer.</h2></div><div class="status-legend"><span><i class="legend-dot green"></i>200 Allowed</span><span><i class="legend-dot amber"></i>401 Sign in</span><span><i class="legend-dot red"></i>403 Restricted</span></div></div>
+        <div id="response-empty" class="response-empty"><span aria-hidden="true">{ }</span><p>Open a resource to inspect its response.<br><small>The HTTP status and response body appear here.</small></p></div>
+        <div id="response-result" hidden><div class="response-meta"><code id="response-endpoint"></code><span id="response-status" class="http-status"></span></div><pre id="response-body" tabindex="0" aria-label="Server response JSON"></pre></div>
+        <div id="directory" hidden><h3>Registered users</h3><div class="table-scroll"><table><thead><tr><th scope="col">Username</th><th scope="col">Role</th><th scope="col">Joined</th></tr></thead><tbody id="directory-rows"></tbody></table></div><p class="field-hint" id="directory-total"></p></div>
+        <p id="request-announcement" class="sr-only" role="status" aria-live="polite"></p>
+      </section>
+      <footer><span><strong>gatehouse</strong> / Authentication & authorization</span><span>Node.js · SQLite · Argon2id</span></footer>
+    </main>
+  </div>
+</body>
+</html>

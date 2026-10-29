@@ -1,0 +1,118 @@
+// Optional browser QA: install Playwright separately; runtime app has zero dependencies.
+import assert from 'node:assert/strict';
+import { randomBytes } from 'node:crypto';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { createApplication } from '../src/app.mjs';
+import { hashPassword } from '../src/auth.mjs';
+
+const playwright = await import(process.env.PLAYWRIGHT_MODULE_PATH
+  ? pathToFileURL(process.env.PLAYWRIGHT_MODULE_PATH).href : 'playwright');
+const output = resolve(process.env.QA_OUTPUT || './test-results/browser');
+await mkdir(output, { recursive: true });
+const app = await createApplication({ secret: randomBytes(32).toString('hex') });
+const origin = await app.listen();
+const password = 'Disposable browser QA! 2026';
+app.db.prepare("INSERT INTO users(username,password_hash,role,created_at) VALUES (?,?,'Admin',?)")
+  .run('qa_admin', await hashPassword(password), Date.now());
+let browser;
+const checks = [];
+const requests = [];
+const pageErrors = [];
+const consoleErrors = [];
+const failedRequests = [];
+try {
+  browser = await playwright.chromium.launch({ headless: true, ...(process.env.BROWSER_CHANNEL ? { channel: process.env.BROWSER_CHANNEL } : {}) });
+  const context = await browser.newContext({ viewport: { width: 1440, height: 1100 } });
+  const page = await context.newPage();
+  page.on('pageerror', (error) => pageErrors.push(error.message));
+  page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
+  page.on('requestfailed', (request) => failedRequests.push({ url: request.url(), error: request.failure()?.errorText }));
+  page.on('response', (response) => {
+    if (response.url().includes('/api/')) requests.push({ path: new URL(response.url()).pathname, method: response.request().method(), status: response.status() });
+  });
+  const waitText = (id, text) => page.locator(`#${id}`).filter({ hasText: text }).waitFor();
+  const requestWith = async (path, action, status) => {
+    const pending = page.waitForResponse((response) => new URL(response.url()).pathname === path && response.request().method() !== 'OPTIONS');
+    await action();
+    assert.equal((await pending).status(), status, path);
+  };
+  const fill = async (username, secret = password) => {
+    await page.getByLabel('Username', { exact: true }).fill(username);
+    await page.getByLabel('Password', { exact: true }).fill(secret);
+  };
+  await page.goto(origin);
+  await waitText('session-status', 'Signed out');
+  await page.screenshot({ path: resolve(output, '01-home.png'), fullPage: true });
+  await page.getByRole('button', { name: 'Sign in', exact: true }).last().click();
+  assert.equal(await page.locator('#username').evaluate((el) => el.validity.valueMissing), true);
+  assert.equal(requests.filter((r) => r.path === '/api/login').length, 0);
+  checks.push('Empty form blocked by browser validation with no auth request');
+  await requestWith('/api/public', () => page.getByRole('button', { name: 'Open public resource' }).click(), 200);
+  await requestWith('/api/profile', () => page.getByRole('button', { name: 'Open user dashboard' }).click(), 401);
+  await requestWith('/api/admin/users', () => page.getByRole('button', { name: 'Open admin directory' }).click(), 401);
+  checks.push('Anonymous: public 200, profile 401, admin 401');
+  await page.getByRole('button', { name: 'Create account', exact: true }).click();
+  await fill('qa_member');
+  await requestWith('/api/register', () => page.locator('#submit-auth').click(), 201);
+  await waitText('auth-message', 'Account created');
+  checks.push('Registration succeeds and invites sign-in');
+  await fill('qa_member', 'Incorrect password! 2026');
+  await requestWith('/api/login', () => page.locator('#submit-auth').click(), 401);
+  await waitText('auth-message', 'Invalid username or password.');
+  checks.push('Bad credentials return generic 401');
+  await fill('qa_member');
+  await requestWith('/api/login', () => page.locator('#submit-auth').click(), 200);
+  await waitText('session-status', 'qa_member · User');
+  await requestWith('/api/profile', () => page.getByRole('button', { name: 'Open user dashboard' }).click(), 200);
+  await requestWith('/api/admin/users', () => page.getByRole('button', { name: 'Open admin directory' }).click(), 403);
+  await waitText('response-status', '403 Forbidden');
+  await page.screenshot({ path: resolve(output, '02-user-forbidden.png'), fullPage: true });
+  checks.push('User: profile 200 and visibly rendered admin 403');
+  const cookies = await context.cookies();
+  const authCookie = cookies.find((cookie) => cookie.name === 'rbac_sid');
+  assert.equal(authCookie.httpOnly, true);
+  assert.equal(authCookie.sameSite, 'Strict');
+  assert.equal(await page.evaluate(() => document.cookie), '');
+  assert.equal(await page.evaluate(() => localStorage.length + sessionStorage.length), 0);
+  checks.push('HttpOnly/SameSite cookie; no credentials in browser storage');
+  await page.reload();
+  await waitText('session-status', 'qa_member · User');
+  checks.push('Session survives a page reload');
+  await requestWith('/api/logout', () => page.getByRole('button', { name: 'Sign out' }).click(), 200);
+  await waitText('session-status', 'Signed out');
+  await requestWith('/api/profile', () => page.getByRole('button', { name: 'Open user dashboard' }).click(), 401);
+  checks.push('Logout clears identity and protected access returns 401');
+  await fill('qa_admin');
+  await requestWith('/api/login', () => page.locator('#submit-auth').click(), 200);
+  await waitText('session-status', 'qa_admin · Admin');
+  await requestWith('/api/profile', () => page.getByRole('button', { name: 'Open user dashboard' }).click(), 200);
+  await requestWith('/api/admin/users', () => page.getByRole('button', { name: 'Open admin directory' }).click(), 200);
+  await page.locator('#directory').waitFor();
+  assert.equal(await page.locator('#directory-rows tr').count(), 2);
+  assert.ok(!(await page.locator('#response-body').innerText()).includes('password_hash'));
+  await page.screenshot({ path: resolve(output, '03-admin-directory.png'), fullPage: true });
+  checks.push('Admin: both resources 200; directory renders and strips password hashes');
+  await requestWith('/api/logout', () => page.getByRole('button', { name: 'Sign out' }).click(), 200);
+  await waitText('session-status', 'Signed out');
+  assert.equal(await page.locator('#directory').isVisible(), false);
+  assert.equal(await page.locator('#directory-rows tr').count(), 0);
+  assert.ok(!(await page.locator('#response-body').innerText()).includes('qa_admin'));
+  checks.push('Logout clears protected directory data from the DOM');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.reload();
+  await waitText('session-status', 'Signed out');
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+  await page.screenshot({ path: resolve(output, '04-mobile.png'), fullPage: true });
+  checks.push('390px mobile layout has no horizontal overflow');
+  assert.deepEqual(pageErrors, []);
+  assert.deepEqual(failedRequests, []);
+  const unexpectedConsole = consoleErrors.filter((message) => !/^Failed to load resource: the server responded with a status of (400|401|403|409|429)\b/.test(message));
+  assert.deepEqual(unexpectedConsole, []);
+  checks.push('No uncaught JavaScript exceptions or failed network transports; only expected negative-test HTTP messages');
+  const report = { result: 'PASS', browser: await browser.version(), node: process.version, checks, requests,
+    pageErrors, failedRequests, expectedHttpConsoleMessages: consoleErrors.length, unexpectedConsole };
+  await writeFile(resolve(output, 'browser-report.json'), JSON.stringify(report, null, 2) + '\n');
+  console.log(JSON.stringify(report, null, 2));
+} finally { await browser?.close(); await app.close(); }

@@ -1,0 +1,18 @@
+Excerpt from the first network-enabled backend test run:
+Command: node --test test/*.test.mjs
+Runtime: Node.js v24.19.0
+
+tests 28
+pass 27
+fail 1
+
+server does not expose environment, database, source files or unrecognized hosts
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+200 !== 400
+
+The failing assertion used fetch with a custom Host header. The runtime
+normalized Host; the request did not contain the intended hostile value.
+The test was corrected to raw node:http.request. See the adjacent diff and
+the final backend-tests.tap for the passing 400 assertion.
+
+This is a preserved excerpt, not a newly executed or complete test log.

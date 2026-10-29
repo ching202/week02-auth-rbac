@@ -1,0 +1,16 @@
+### Week 02 Hands-On Assignment Submission
+
+* **Live Demo URL:** N/A - Local Server/CLI
+* **GitHub Repository:** [REPLACE WITH YOUR ACTUAL GITHUB REPOSITORY URL]
+* **Video Demonstration:** [REPLACE WITH YOUR ACTUAL UNLISTED/PUBLIC VIDEO URL]
+
+#### Video Timestamps:
+
+* 0:00 - Architecture Overview & AI Security Audit
+* 1:30 - Live Functionality Demo (AuthN & RBAC)
+* 3:30 - QA Testing Guide: Negative Cases & DevTools Inspection
+* 5:30 - Conclusion & Lessons Learned
+
+Before submitting: replace both URL placeholders, verify the recording lasts
+5–7 minutes and shows your face plus screen simultaneously, and adjust the
+timestamps if your final edit differs from the guide. Do not submit this note.

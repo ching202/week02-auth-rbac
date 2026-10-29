@@ -1,0 +1,74 @@
+GATEHOUSE — AI SECURITY REVIEW
+Prepared October 28, 2026 (America/New_York)
+
+Reviewer: AI-assisted review by OpenAI Codex. Student independent review pending.
+This review does not claim a professional penetration test or certification.
+
+1. PASSWORDS
+Native Node Argon2id, not plaintext/MD5/SHA-256. The fixed parameters are
+m=19456 KiB, t=2, p=1; each password receives a new 16-byte random salt.
+The 32-byte derived result is stored with its parameters and salt in PHC-style
+encoding. Verification uses timingSafeEqual. Test output verifies different
+hashes for equal passwords and rejection of incorrect passwords.
+Passwords preserve spaces/symbols and are never trimmed or truncated. Bounds
+are 12–128 JavaScript string code units in this example; the UI uses the same
+HTML length bounds. SQL-like passwords are safe because queries are bound.
+
+2. PRIVILEGE BOUNDARIES
+GET /api/profile calls requireUser; GET /api/admin/users calls requireAdmin.
+Unauthenticated -> 401. Authenticated User at Admin route -> 403.
+Registration explicitly inserts User and rejects extra fields such as role.
+The local Admin CLI is the sole supplied provisioning path. It creates a new
+account and does not silently promote a possibly attacker-controlled User.
+Session lookup joins users on every request: changing an Admin to User removes
+Admin access immediately, without waiting for a token to expire.
+
+3. SESSIONS AND CSRF
+Browser: 256-bit random opaque token, HttpOnly, SameSite=Strict, host-only.
+Database: SHA-256 of that random token, user ID, absolute expiration time.
+SHA-256 here is for high-entropy tokens, never password storage.
+Login deletes the anonymous/previous session and issues a fresh token.
+Logout deletes the session row; a captured old cookie cannot be replayed.
+CSRF token = HMAC over the session token with an environment secret.
+State-changing routes also require exact Origin and application/json.
+CSRF is required for registration and login as well as logout.
+No credential or session token is stored in localStorage/sessionStorage.
+
+4. SECRETS, ERRORS, AND DATA
+.env generated locally, ignored by Git, excluded from ZIP.
+Production HTTP fails startup; HTTPS enables Secure cookies and HSTS.
+API publicUser serialization returns id, username, role, createdAt only.
+Unknown and incorrect credentials use the same error and perform Argon2id
+verification. A malformed username/password gets a validation error instead.
+Database errors do not echo SQL or stack traces to the client.
+Full hashes are exposed only by an explicitly invoked local inspection CLI.
+
+5. ACTUAL FINDING / CORRECTION
+Finding: the first AI-generated hostile-Host test used fetch with a Host header.
+The runtime normalized Host before transmission. The test got 200 even though
+it appeared to send an attacker-controlled host. This was invalid test evidence.
+Correction: use node:http.request to put Host: attacker.example on the wire.
+Observed result: 400. The suite changed from 27/28 to 28/28 passing tests.
+Evidence: host-header-test-fix.diff, initial-host-test-failure.txt, backend-tests.tap.
+Lesson: an AI-generated attack test must demonstrate the input it actually sends.
+This is a test improvement, not a fabricated server vulnerability or human patch.
+
+6. KNOWN LIMITATIONS / RETROSPECTIVE
+- Duplicate registration returns 409 and may reveal username availability.
+- Generic login text and dummy hashing reduce, not prove absence of, timing leakage.
+- This is a single-node SQLite demonstration, not a distributed identity service.
+- Rate limits include successful attempts and can inconvenience repeated demos.
+- A reverse proxy shares an IP bucket unless trusted-proxy handling is designed.
+- No MFA, recovery, email verification, per-device session UI, or central audit logs.
+- The database depends on OS file permissions; protect backups as well.
+- Native Node API stability can differ across releases; use the tested Node 24 series.
+- Browser negative tests intentionally produce failed-resource HTTP messages.
+- Headless Chrome QA is complete; a student webcam/DevTools recording is still required.
+
+7. STUDENT REVIEW PROMPTS (NOT CLAIMS OF COMPLETED HUMAN WORK)
+Trace a User request to the Admin endpoint and point at the guard that rejects it.
+Explain why hiding the Admin button would not protect the endpoint.
+Explain why public signup must never accept role: Admin.
+Compare hashing a password with hashing a random session token.
+Explain why deleting only a browser cookie would not revoke a stolen server session.
+Reproduce the Host-header correction and explain the test-transport assumption.

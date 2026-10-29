@@ -1,0 +1,12 @@
+--- initial AI-generated test (excerpt)
++++ corrected test (excerpt)
+@@
+-  assert.equal((await browser.call('/api/public', { headers: { Host: 'attacker.example' } })).status, 400);
++  // Fetch normalizes Host. Use a raw HTTP request to actually send the hostile value.
++  const hostileHost = await new Promise((resolve, reject) => {
++    const req = httpRequest(base + '/api/public', { headers: { Host: 'attacker.example' } }, (res) => {
++      res.resume(); res.on('end', () => resolve(res.statusCode));
++    });
++    req.on('error', reject); req.end();
++  });
++  assert.equal(hostileHost, 400);

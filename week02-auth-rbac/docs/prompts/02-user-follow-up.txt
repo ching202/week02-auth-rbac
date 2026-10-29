@@ -1,0 +1,5 @@
+Question asked by the assistant:
+For the required GitHub submission, should I prepare the project for you to upload, or help publish it through your GitHub account?
+
+User's exact answer:
+Prepare the project for me to upload

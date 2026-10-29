@@ -1,0 +1,91 @@
+GATEHOUSE — 6 MINUTE 30 SECOND RECORDING GUIDE
+
+Record your screen and your webcam/face at the same time. Use this as a cue
+sheet and explain the code in your own words. Do not claim you manually wrote
+or patched anything you have not personally reviewed or changed.
+
+BEFORE RECORDING
+1. Follow README setup. Create a new throwaway Admin through the local CLI.
+2. Start the app at http://127.0.0.1:3000 and leave it signed out.
+3. Pick an unused User name for live registration and a 12+ character password.
+4. Open README, src/auth.mjs, src/app.mjs, and docs/host-header-test-fix.diff.
+5. Open browser DevTools: Network with Fetch/XHR visible, Preserve log enabled;
+   keep Console reachable. Increase text size so the viewer can read statuses.
+6. Keep a second terminal in the project directory for tests and hash inspection.
+7. Test camera and microphone. Make your webcam visible without obscuring the app.
+8. Rehearse once with a timer. Target 6:30, permitted range 5:00–7:00.
+
+0:00–0:30 | ARCHITECTURE
+Show the app and README architecture. Explain the stack: Node 24, SQLite,
+Argon2id, same-origin HTML/JS, and opaque server-side sessions.
+Authentication answers who you are; authorization answers what you may access.
+
+0:30–1:00 | AI PROMPT AND SECURITY REVIEW
+Show docs/prompts/01-user-assignment.txt and its sample prompt.
+State accurately that the original assignment was supplied to OpenAI Codex.
+Point at hashPassword, requireUser, and requireAdmin in src/auth.mjs.
+Point at the fixed User role in public registration inside src/app.mjs.
+
+1:00–1:30 | CONCRETE AI CORRECTION
+Show docs/host-header-test-fix.diff and the failure excerpt.
+Explain: the generated test appeared to forge Host using fetch, but the runtime
+normalized it; the test was corrected to raw HTTP and now gets a genuine 400.
+Mention the lesson: verify attack input and actual responses, not just AI claims.
+Do not claim an intentionally insecure earlier app or a student manual fix.
+
+1:30–2:00 | REGISTER AND LOG IN AS USER
+Click Create account. Register the unused User; show 201.
+Sign in; show the User role and successful session. Open User dashboard (200).
+
+2:00–2:35 | LOGOUT AND PROTECTED BOUNDARY
+Sign out. Open User dashboard while signed out: 401.
+Explain that logout also deletes the server session, so replay fails in tests.
+
+2:35–3:15 | ADMIN FUNCTIONALITY
+Sign in with the Admin you created through the trusted CLI.
+Open User dashboard (200), then Admin directory (200); show both accounts.
+Point out that the web response contains no password hashes.
+
+3:15–3:30 | PREPARE NEGATIVE TESTS
+Sign out of Admin; sign back in as User. Bring DevTools Network into view.
+
+3:30–4:00 | USER -> ADMIN DENIAL
+Open Admin directory. Select the /api/admin/users request in Network.
+Show the real 403 status and the JSON error. Explain that the button is visible
+and the backend still refuses access. Open User dashboard to compare its 200.
+
+4:00–4:30 | BAD CREDENTIALS + EMPTY INPUT
+Sign out. Try a wrong password of at least 12 characters so it reaches login.
+Show 401 and "Invalid username or password." in Network and the interface.
+Clear the fields and submit: show the browser's required-field validation.
+
+4:30–5:00 | SERVER VALIDATION + HASHED DATABASE
+In the second terminal, run:
+  node --test --test-name-pattern="SQL-like" test/auth.test.mjs
+Explain that the test sends SQL-like input to the server, not only the UI.
+Then run:
+  node --env-file=.env scripts/inspect-db.mjs
+Show $argon2id$ hashes for the throwaway accounts; equal passwords have unique
+salts. Do not display .env, production credentials, or a personal database.
+
+5:00–5:30 | QA EVIDENCE
+Show the README's completed checklist and backend test result.
+Open Console: no uncaught runtime exception. Explain that deliberate 401/403
+requests can produce expected red HTTP messages; these are successful denials.
+If time permits, run: node --test test/*.test.mjs
+
+5:30–6:30 | REFLECTION
+Explain in your own words:
+- AI can generate correct-looking tests that do not send the intended attack.
+- Password hashing and backend guards are independent security controls.
+- The server, not UI visibility or browser role values, decides access.
+- Session revocation matters after logout; a cookie alone is not authorization.
+- This classroom app omits MFA/recovery and distributed deployment controls.
+State your own actual review/editing contribution truthfully.
+Finish around 6:30, then stop the recording.
+
+AFTER RECORDING
+Check the full video: face + screen visible, audible voice, duration in range,
+statuses and database hashes legible. Upload Unlisted/Public as permitted by
+the assignment. Paste its real URL and your real GitHub URL into SUBMISSION.txt.
+Use Live Demo URL: N/A - Local Server/CLI. Paste the completed template into LMS.

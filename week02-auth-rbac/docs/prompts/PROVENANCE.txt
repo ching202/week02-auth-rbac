@@ -1,0 +1,20 @@
+PROMPT LOG PROVENANCE
+
+01-user-assignment.txt is the verbatim attached Pasted text.txt supplied by the
+user. It includes the assignment description, rubric, and embedded example AI
+prompt. That embedded example was not separately submitted as a user message.
+The user provided no additional custom text after "My request:".
+
+02-user-follow-up.txt records the assistant's publishing-scope question and
+the user's exact answer. The answer authorizes preparation for manual upload.
+
+OpenAI Codex generated the implementation, reviewed it, ran tests and browser
+QA, and corrected the generated Host-header test within this conversation.
+Internal reasoning and tool commands are not additional human prompts.
+No fictional prompt iterations, student edits, GitHub publication, video
+recording, or LMS submission are represented as completed.
+
+If the student makes further changes with AI, append the actual prompts and
+describe those changes. Before public upload, review the LMS metadata in the
+original paste; label any redaction explicitly rather than calling a changed
+file an exact unmodified copy.

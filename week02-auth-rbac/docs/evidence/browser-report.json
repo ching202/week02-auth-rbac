@@ -1,0 +1,120 @@
+{
+  "result": "PASS",
+  "browser": "156.0.8078.48",
+  "node": "v24.19.0",
+  "checks": [
+    "Empty form blocked by browser validation with no auth request",
+    "Anonymous: public 200, profile 401, admin 401",
+    "Registration succeeds and invites sign-in",
+    "Bad credentials return generic 401",
+    "User: profile 200 and visibly rendered admin 403",
+    "HttpOnly/SameSite cookie; no credentials in browser storage",
+    "Session survives a page reload",
+    "Logout clears identity and protected access returns 401",
+    "Admin: both resources 200; directory renders and strips password hashes",
+    "Logout clears protected directory data from the DOM",
+    "390px mobile layout has no horizontal overflow",
+    "No uncaught JavaScript exceptions or failed network transports; only expected negative-test HTTP messages"
+  ],
+  "requests": [
+    {
+      "path": "/api/session",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/public",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/profile",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "path": "/api/admin/users",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "path": "/api/register",
+      "method": "POST",
+      "status": 201
+    },
+    {
+      "path": "/api/login",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "path": "/api/login",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/profile",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/admin/users",
+      "method": "GET",
+      "status": 403
+    },
+    {
+      "path": "/api/session",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/logout",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/session",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/profile",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "path": "/api/login",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/profile",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/admin/users",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/logout",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/session",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/session",
+      "method": "GET",
+      "status": 200
+    }
+  ],
+  "pageErrors": [],
+  "failedRequests": [],
+  "expectedHttpConsoleMessages": 5,
+  "unexpectedConsole": []
+}
