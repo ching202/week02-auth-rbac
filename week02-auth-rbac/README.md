@@ -148,30 +148,6 @@ The read-only command prints usernames, roles, and encoded Argon2id hashes from 
 
 **What needed correction:** the generated hostile-Host test relied on an incorrect assumption about `fetch`. It was changed to a transport that actually sends the hostile value. The execution sandbox initially blocked loopback HTTP, and Edge could not start there; those environment issues were resolved by network permission and running Chrome. Neither is presented as an application security fix.
 
-**Student review still needed:** read and understand the guards, inspect local hashes, reproduce the key test cases, and explain the tradeoffs in your own words. If you make further edits, append your actual prompts and findings. The supplied prompt file contains LMS status/grade metadata from the original paste; review that metadata before making your repository public. If you redact it, clearly label the redaction while retaining the assignment instructions.
-
-## Prepare the GitHub submission
-
-The user requested a prepared project for manual upload. No remote repository has been created.
-
-Create an empty repository named `week02-auth-rbac` on GitHub. Do not initialize its README. From this project directory:
-
-```sh
-git init -b main
-git add .
-git status
-git commit -m "Implement authentication and server-side RBAC"
-git remote add origin https://github.com/YOUR-USERNAME/week02-auth-rbac.git
-git push -u origin main
-```
-
-Replace `YOUR-USERNAME`. Before committing, confirm `git status` does **not** list `.env`, `data/`, `node_modules/`, or any database file. Git may ask you to configure your own author name/email and sign in. You can also upload the extracted ZIP through GitHub's web interface, but keep `.gitignore` and `.env.example` included.
-
-Use **N/A — Local Server/CLI** for Live Demo URL; the assignment explicitly allows it. A local link is not publicly reachable. Do not deploy this SQLite app to static-only hosting or an ephemeral filesystem. A hosted version needs a persistent disk, HTTPS, a long-running Node 24 process, and the production configuration described in `.env.example`.
-
-## Recording and submission
-
-Follow the [6:30 recording guide](docs/RECORDING-GUIDE.txt), showing your **screen and webcam simultaneously**, and fill in [SUBMISSION.txt](SUBMISSION.txt) with your repository and video URLs. Those URLs remain placeholders until you upload them. The browser screenshots and automated evidence support your preparation; they do not replace the required live video demonstration.
 
 ## Scope and tradeoffs
 
